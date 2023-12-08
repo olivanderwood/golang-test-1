@@ -78,16 +78,16 @@ func (s *PostgresStore) createApiKeyTable() error {
 		key varchar(100),
 		usage_count integer
 	)`
-	insertQuery := `insert into api_key (id, key, usage_count) values (1, '1d967a0a2bdbd3e0b72b4f', 0);
-insert into api_key (id, key, usage_count) values (2, 'e9857f009023ca6eba88df', 0);
-insert into api_key (id, key, usage_count) values (3, '95a07c09131158b0c0b377', 0);
-insert into api_key (id, key, usage_count) values (4, 'd61aa68a1fb06483d84901', 0);
-insert into api_key (id, key, usage_count) values (5, 'e2eac4d6d9e9ca9d85b7d9', 0);`
+// 	insertQuery := `insert into api_key (id, key, usage_count) values (1, '1d967a0a2bdbd3e0b72b4f', 0);
+// insert into api_key (id, key, usage_count) values (2, 'e9857f009023ca6eba88df', 0);
+// insert into api_key (id, key, usage_count) values (3, '95a07c09131158b0c0b377', 0);
+// insert into api_key (id, key, usage_count) values (4, 'd61aa68a1fb06483d84901', 0);
+// insert into api_key (id, key, usage_count) values (5, 'e2eac4d6d9e9ca9d85b7d9', 0);`
 	_, err := s.db.Exec(query)
-	_, errIns := s.db.Exec(insertQuery)
-	if errIns != nil {
-		return errIns
-	}
+	// _, errIns := s.db.Exec(insertQuery)
+	// if errIns != nil {
+	// 	return errIns
+	// }
 	return err
 }
 
