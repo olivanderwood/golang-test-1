@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
-
+	"net/url"
 	"github.com/gorilla/mux"
 )
 
@@ -79,32 +79,32 @@ func (s *APIServer) handleGetPageMeta(w http.ResponseWriter, r *http.Request) er
 		return err
 	}
 
-	url := getPageMetaRequest.Url
+	urlReq := getPageMetaRequest.Url
+	_, urlError := url.ParseRequestURI(urlReq)
+	if urlError != nil {
+		return WriteJSON(w, http.StatusInternalServerError, "Invalid Url")
+	}
+	pageMeta, pageMetaErr := s.store.GetPageMetaByUrl(urlReq)
 
-	pageMeta, err := s.store.GetPageMetaByUrl(url)
-
-	fmt.Printf("%+v\n", pageMeta)
-	fmt.Printf("%+v\n", err)
-
-	if err != nil || pageMeta == nil {
-		apiKey, erro := s.store.GetRandomApiKey()
+	if pageMetaErr != nil || pageMeta == nil {
+		apiKey, apiKeyErr := s.store.GetRandomApiKey()
 		fmt.Println(apiKey.Key)
-		if erro != nil {
-			fmt.Print(err.Error())
+		if apiKeyErr != nil {
+			fmt.Print(apiKeyErr.Error())
 		}
-		response, err := http.Get("https://iframe.ly/api/oembed?url=" + url + "&api_key=" + apiKey.Key)
+		response, resErr := http.Get("https://iframe.ly/api/oembed?url=" + urlReq + "&api_key=" + apiKey.Key)
 
-		if err != nil {
-			fmt.Print(err.Error())
+		if resErr != nil {
+			fmt.Print(resErr.Error())
 		}
 		defer response.Body.Close()
 		pageMetaResponse := new(PageMeta)
 
 		json.NewDecoder(response.Body).Decode(pageMetaResponse)
-		videoID, err := getYouTubeVideoID(url)
+		videoID, videoErr := getYouTubeVideoID(urlReq)
 		pageMetaResponse.DataIframelyUrl = strings.Contains(pageMetaResponse.Html, "data-iframely-url")
-		pageMetaResponse.Url = url
-		if err == nil {
+		pageMetaResponse.Url = urlReq
+		if videoErr == nil {
 			pageMetaResponse.YoutubeVideoId = videoID
 		}
 

@@ -1,16 +1,6 @@
 version: '3.7'
 
 services:
-  golang-ex:
-    container_name: golang-ex
-    image: golang-ex:1.0.1
-    build: .
-    environment:
-      DATABASE_URL: 'host=go_db user=postgres dbname=postgres password=postgres sslmode=disable'
-    ports:
-      - '3000:3000'
-    depends_on:
-      - go_db
   go_db:
     container_name: go_db
     image: postgres:12
@@ -22,6 +12,17 @@ services:
       - '5432:5432'
     volumes:
       - ./pgdata:/var/lib/postgresql/data
+    command: ''
+  golang-ex:
+    container_name: golang-ex
+    image: golang-ex:1.0.1
+    build: .
+    environment:
+      DATABASE_URL: 'host=go_db user=postgres dbname=postgres password=postgres sslmode=disable'
+    ports:
+      - '3000:3000'
+    depends_on:
+      - go_db
 
 volumes:
   pgdata: {}
