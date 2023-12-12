@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strings"
-	"net/url"
+
 	"github.com/gorilla/mux"
 )
 
@@ -48,7 +49,6 @@ func (s *APIServer) Run() {
 	router.HandleFunc("/api/meta", makeHTTPHandleFunc(s.handleGetMeta))
 	http.ListenAndServe(s.listenAddr, router)
 }
-
 
 func (s *APIServer) handleGetMeta(w http.ResponseWriter, r *http.Request) error {
 	if r.Method == "POST" {
@@ -92,18 +92,16 @@ func (s *APIServer) handleGetPageMeta(w http.ResponseWriter, r *http.Request) er
 		if videoErr == nil {
 			pageMetaResponse.YoutubeVideoId = videoID
 		}
-
-		if err := s.store.CreatePageMeta(pageMetaResponse); err != nil {
+		newData, err := s.store.CreatePageMeta(pageMetaResponse)
+		if err != nil {
 			fmt.Print(err.Error())
 		}
-		return WriteJSON(w, http.StatusOK, pageMetaResponse)
+		return WriteJSON(w, http.StatusOK, newData)
 	}
 
 	return WriteJSON(w, http.StatusOK, pageMeta)
-	
 
 }
-
 
 func getYouTubeVideoID(url string) (string, error) {
 	// Regular expression to match YouTube video ID

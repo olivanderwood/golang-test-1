@@ -2,8 +2,8 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
-	"os"
+
+	// "os"
 
 	_ "github.com/lib/pq"
 )
@@ -11,7 +11,7 @@ import (
 type Storage interface {
 	GetRandomApiKey() (*ApiKey, error)
 	GetPageMetaByUrl(string) (*PageMeta, error)
-	CreatePageMeta(*PageMeta) error
+	CreatePageMeta(*PageMeta) (*PageMeta, error)
 }
 
 type PostgresStore struct {
@@ -55,11 +55,11 @@ func (s *PostgresStore) createApiKeyTable() error {
 		key varchar(100),
 		usage_count integer
 	)`
-// 	insertQuery := `insert into api_key (id, key, usage_count) values (1, '1d967a0a2bdbd3e0b72b4f', 0);
-// insert into api_key (id, key, usage_count) values (2, 'e9857f009023ca6eba88df', 0);
-// insert into api_key (id, key, usage_count) values (3, '95a07c09131158b0c0b377', 0);
-// insert into api_key (id, key, usage_count) values (4, 'd61aa68a1fb06483d84901', 0);
-// insert into api_key (id, key, usage_count) values (5, 'e2eac4d6d9e9ca9d85b7d9', 0);`
+	// 	insertQuery := `insert into api_key (id, key, usage_count) values (1, '1d967a0a2bdbd3e0b72b4f', 0);
+	// insert into api_key (id, key, usage_count) values (2, 'e9857f009023ca6eba88df', 0);
+	// insert into api_key (id, key, usage_count) values (3, '95a07c09131158b0c0b377', 0);
+	// insert into api_key (id, key, usage_count) values (4, 'd61aa68a1fb06483d84901', 0);
+	// insert into api_key (id, key, usage_count) values (5, 'e2eac4d6d9e9ca9d85b7d9', 0);`
 	_, err := s.db.Exec(query)
 	// _, errIns := s.db.Exec(insertQuery)
 	// if errIns != nil {
@@ -69,8 +69,8 @@ func (s *PostgresStore) createApiKeyTable() error {
 }
 
 func NewPostgresStore() (*PostgresStore, error) {
-	connStr := os.Getenv("DATABASE_URL")
-	db, err := sql.Open("postgres", connStr)
+	// connStr := os.Getenv("DATABASE_URL")
+	db, err := sql.Open("postgres", "user=postgres dbname=postgres password=postgres sslmode=disable")
 	if err != nil {
 		return nil, err
 	}
@@ -146,14 +146,28 @@ func (s *PostgresStore) GetPageMetaByUrl(url string) (*PageMeta, error) {
 
 }
 
-func (s *PostgresStore) CreatePageMeta(pageMeta *PageMeta) error {
-	resp, err := s.db.Exec(`insert into page_meta (author, cache_age, data_iframely_url, description, html, type, provider_name, thumbnail_height, thumbnail_width, thumbnail_url, url, title, version, youtube_video_id)
+func (s *PostgresStore) CreatePageMeta(pageMeta *PageMeta) (*PageMeta, error) {
+	newPageMeta := new(PageMeta)
+	err := s.db.QueryRow(`insert into page_meta (author, cache_age, data_iframely_url, description, html, type, provider_name, thumbnail_height, thumbnail_width, thumbnail_url, url, title, version, youtube_video_id)
 							values
-							($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
-		pageMeta.Author, pageMeta.CacheAge, pageMeta.DataIframelyUrl, pageMeta.Description, pageMeta.Html, pageMeta.Type, pageMeta.ProviderName, pageMeta.ThumbnailHeight, pageMeta.ThumbnailWidth, pageMeta.ThumbnailUrl, pageMeta.Url, pageMeta.Title, pageMeta.Version, pageMeta.YoutubeVideoId)
+							($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) returning *`,
+		pageMeta.Author, pageMeta.CacheAge, pageMeta.DataIframelyUrl, pageMeta.Description, pageMeta.Html, pageMeta.Type, pageMeta.ProviderName, pageMeta.ThumbnailHeight, pageMeta.ThumbnailWidth, pageMeta.ThumbnailUrl, pageMeta.Url, pageMeta.Title, pageMeta.Version, pageMeta.YoutubeVideoId).Scan(&newPageMeta.ID,
+		&newPageMeta.Url,
+		&newPageMeta.Type,
+		&newPageMeta.Version,
+		&newPageMeta.Title,
+		&newPageMeta.Author,
+		&newPageMeta.ProviderName,
+		&newPageMeta.ThumbnailUrl,
+		&newPageMeta.ThumbnailWidth,
+		&newPageMeta.ThumbnailHeight,
+		&newPageMeta.Html,
+		&newPageMeta.CacheAge,
+		&newPageMeta.DataIframelyUrl,
+		&newPageMeta.YoutubeVideoId,
+		&newPageMeta.Description)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	fmt.Println(resp)
-	return nil
+	return newPageMeta, nil
 }
