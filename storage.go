@@ -3,7 +3,7 @@ package main
 import (
 	"database/sql"
 
-	// "os"
+	"os"
 
 	_ "github.com/lib/pq"
 )
@@ -69,8 +69,8 @@ func (s *PostgresStore) createApiKeyTable() error {
 }
 
 func NewPostgresStore() (*PostgresStore, error) {
-	// connStr := os.Getenv("DATABASE_URL")
-	db, err := sql.Open("postgres", "user=postgres dbname=postgres password=postgres sslmode=disable")
+	connStr := os.Getenv("DATABASE_URL")
+	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		return nil, err
 	}
